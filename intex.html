@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Configurações Personalizadas do Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        deepNight: '#0f0518',
+                        romancePurple: '#2d1b4e',
+                        wine: '#722f37',
+                        softGold: '#ffd700',
+                        rosePink: '#ffccd5',
+                        paper: '#fdf6e3',
+                    },
+                    fontFamily: {
+                        script: ['"Great Vibes"', 'cursive'],
+                        serif: ['"Playfair Display"', 'serif'],
+                        text: ['"Lora"', 'serif'],
+                        title: ['"Cinzel"', 'serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos Globais e Utilitários */
+        body {
+            background-color: #0f0518;
+            color: #ffccd5;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Efeito de Fita Adesiva (Tape) para o Scrapbook */
+        .tape {
+            background-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 100px;
+            height: 30px;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Moldura Polaroid / Scrapbook */
+        .polaroid {
+            background: #fff;
+            padding: 10px 10px 40px 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.4s ease;
+        }
+        
+        .polaroid:hover {
+            transform: scale(1.05) rotate(0deg) !important;
+            z-index: 20;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Canvas de Fundo */
+        #starCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Cursor do efeito de digitação */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0518;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #722f37;
+            border-radius: 4px;
+        }
+
+        /* Efeito de brilho nas bordas */
+        .glow-border {
+            box-shadow: 0 0 15px rgba(114, 47, 55, 0.5);
+        }
+
+        /* Classes para animação de scroll (Fade In Up) */
+        .reveal {
+            position: relative;
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        .reveal.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Estilo Papel Vintage */
+        .vintage-paper {
+            background-image: repeating-linear-gradient(#fdf6e3 0px, #fdf6e3 24px, #94a3b8 25px);
+            line-height: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="font-text antialiased selection:bg-wine selection:text-white">
+
+    <!-- Canvas para Estrelas -->
+    <canvas id="starCanvas"></canvas>
+
+    <!-- Botão de Música -->
+    <div class="fixed bottom-5 right-5 z-50">
+        <button id="musicBtn" class="bg-wine/80 hover:bg-wine text-white p-4 rounded-full shadow-lg border-2 border-softGold transition-all hover:scale-110 animate-pulse-slow">
+            <i class="fas fa-music"></i>
+        </button>
+        <audio id="bgMusic" loop>
+            <!-- Música Royalty Free Romântica (Piano) -->
+            <source src="music/music.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <!-- TELA INICIAL (HERO) -->
+    <header class="h-screen flex flex-col justify-center items-center text-center px-4 relative overflow-hidden">
+        
+        <!-- Elementos decorativos de fundo -->
+        <div class="absolute top-10 left-10 text-softGold/20 text-6xl animate-float"><i class="fas fa-star"></i></div>
+        <div class="absolute bottom-20 right-10 text-wine/30 text-8xl animate-float" style="animation-delay: 2s;"><i class="fas fa-heart"></i></div>
+
+        <div class="z-10 relative max-w-3xl">
+            <!-- Foto Principal com Efeito Scrapbook -->
+            <div class="relative inline-block mb-8 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                <div class="tape"></div>
+                <div class="p-2 bg-white shadow-2xl rounded-sm">
+                    <!-- Substitua o src abaixo pela foto principal de vocês -->
+                    <img src="img/capa.jpeg" 
+                         alt="Nós" 
+                         class="w-64 h-64 object-cover filter sepia-[0.3]">
+                </div>
+            </div>
+
+            <h1 class="text-6xl md:text-8xl font-script text-softGold mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-0 animate-fade-in-up" style="animation: fadeIn 2s forwards;">
+                Para o amor da minha vida
+            </h1>
+            
+            <div class="h-16">
+                <p id="typing-text" class="text-xl md:text-2xl text-rosePink font-serif italic typing-cursor"></p>
+            </div>
+
+            <div class="mt-12">
+                <i class="fas fa-chevron-down text-3xl text-white/50 animate-bounce"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- NOSSA HISTÓRIA (TIMELINE - AGORA COM 12 ITENS) -->
+    <section class="py-20 px-4 max-w-5xl mx-auto relative">
+        <div class="text-center mb-16 reveal">
+            <h2 class="text-5xl font-script text-softGold mb-4">Nossa História</h2>
+            <div class="w-24 h-1 bg-wine mx-auto rounded-full"></div>
+        </div>
+
+        <!-- Linha Vertical -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gradient-to-b from-transparent via-softGold to-transparent opacity-30 hidden md:block"></div>
+
+        <div class="space-y-24">
+            
+            <!-- Marco 1 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-2 md:order-1 relative">
+                    <div class="tape"></div>
+                    <div class="polaroid transform rotate-2 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto01.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="O Início">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">O dia que nos conhecemos...</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-1 md:order-2 text-center md:text-left bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">1. O Primeiro Olhar</h3>
+                    <p class="text-gray-300">Foi aqui que tudo começou. Lembro exatamente da roupa que você usava e do seu sorriso que iluminou tudo ao redor.</p>
+                </div>
+            </div>
+
+            <!-- Marco 2 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-1 md:order-1 text-center md:text-right bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">2. O Primeiro Beijo</h3>
+                    <p class="text-gray-300">Aquele momento mágico onde o mundo parou e só existia a gente. O começo do nosso pra sempre.</p>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-2 md:order-2 relative">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="polaroid transform -rotate-3 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto2.avif" class="w-full h-64 object-cover sepia-[0.2]" alt="Beijo">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Inesquecível</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marco 3 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-2 md:order-1 relative">
+                    <div class="tape"></div>
+                    <div class="polaroid transform rotate-1 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto03.png" class="w-full h-64 object-cover sepia-[0.2]" alt="Pedido">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">O Pedido</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-1 md:order-2 text-center md:text-left bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">3. Pedido de Namoro</h3>
+                    <p class="text-gray-300">Quando oficializamos nosso amor. Lembro do frio na barriga e da alegria imensa ao ouvir seu "sim".</p>
+                </div>
+            </div>
+
+            <!-- Marco 4 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-1 md:order-1 text-center md:text-right bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">4. Primeira "Eu te Amo"</h3>
+                    <p class="text-gray-300">As palavras saíram naturalmente porque meu coração já não conseguia mais guardar tanto sentimento.</p>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-2 md:order-2 relative">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="polaroid transform -rotate-2 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto04.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Cartas">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Declaração</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marco 5 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-2 md:order-1 relative">
+                    <div class="tape"></div>
+                    <div class="polaroid transform rotate-3 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto05.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Viagem">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Aventuras</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-1 md:order-2 text-center md:text-left bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">5. Primeira Viagem</h3>
+                    <p class="text-gray-300">Descobrindo novos lugares juntos. Cada paisagem ficava mais bonita com você ao meu lado.</p>
+                </div>
+            </div>
+
+            <!-- Marco 6 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-1 md:order-1 text-center md:text-right bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">6. Nossas Manias</h3>
+                    <p class="text-gray-300">Aquele momento que percebemos que temos nosso próprio jeito de falar, rir e viver. Nosso pequeno universo.</p>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-2 md:order-2 relative">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="polaroid transform -rotate-1 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto06.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Risadas">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Conexão</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marco 7 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-2 md:order-1 relative">
+                    <div class="tape"></div>
+                    <div class="polaroid transform rotate-2 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto07.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Natal">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Festas Juntos</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-1 md:order-2 text-center md:text-left bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">7. Primeiro Natal</h3>
+                    <p class="text-gray-300">Celebrando datas especiais. O melhor presente sempre foi e sempre será a sua companhia.</p>
+                </div>
+            </div>
+
+            <!-- Marco 8 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-1 md:order-1 text-center md:text-right bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">8. Superando Desafios</h3>
+                    <p class="text-gray-300">Nem tudo são flores, mas seguramos a mão um do outro nos momentos difíceis e saímos mais fortes.</p>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-2 md:order-2 relative">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="polaroid transform -rotate-3 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto08.png" class="w-full h-64 object-cover sepia-[0.2]" alt="Apoio">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Companheirismo</p>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Marco 9 -->
+             <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-2 md:order-1 relative">
+                    <div class="tape"></div>
+                    <div class="polaroid transform rotate-1 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto09.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Aniversário">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Juntos</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-1 md:order-2 text-center md:text-left bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">9. Aniversário de Namoro</h3>
+                    <p class="text-gray-300">365 dias de felicidade pura. Olhar para trás e ver tudo que construímos me enche de orgulho.</p>
+                </div>
+            </div>
+
+            <!-- Marco 10 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-1 md:order-1 text-center md:text-right bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">10. Nossos Sonhos</h3>
+                    <p class="text-gray-300">Planejar o futuro com você é minha atividade favorita. Casa, viagens, família... tudo com você.</p>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-2 md:order-2 relative">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="polaroid transform -rotate-2 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto10.png" class="w-full h-64 object-cover sepia-[0.2]" alt="Sonhos">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">O Futuro</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marco 11 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-2 md:order-1 relative">
+                    <div class="tape"></div>
+                    <div class="polaroid transform rotate-2 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto11.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Hoje">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">O melhor</p>
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-1 md:order-2 text-center md:text-left bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">11. Empreendedorismo</h3>
+                    <p class="text-gray-300">Quando abrimos a Brigadeiruuu, descobrimos que o ingrediente secreto de cada receita sempre foi o amor que transborda entre nós.</p>
+                </div>
+            </div>
+
+            <!-- Marco 12 -->
+            <div class="reveal flex flex-col md:flex-row items-center justify-between gap-8 group">
+                <div class="w-full md:w-5/12 order-1 md:order-1 text-center md:text-right bg-romancePurple/40 p-6 rounded-lg border border-wine/30 backdrop-blur-sm">
+                    <h3 class="text-2xl font-serif text-softGold mb-2">12. Para Sempre</h3>
+                    <p class="text-gray-300">Não importa o que aconteça, meu lugar é ao seu lado. Essa história está apenas começando.</p>
+                </div>
+                <div class="w-8 h-8 bg-wine border-2 border-softGold rounded-full absolute left-1/2 transform -translate-x-1/2 hidden md:block z-20 shadow-[0_0_15px_#ffd700]"></div>
+                <div class="w-full md:w-5/12 order-2 md:order-2 relative">
+                    <div class="tape" style="transform: translateX(-50%) rotate(2deg);"></div>
+                    <div class="polaroid transform -rotate-1 group-hover:rotate-0 transition-transform">
+                        <img src="img/foto12.jpeg" class="w-full h-64 object-cover sepia-[0.2]" alt="Eterno">
+                        <p class="text-gray-800 text-center font-script text-xl mt-2">Infinito</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- GALERIA (MOMENTOS) -->
+    <section class="py-20 bg-deepNight relative overflow-hidden">
+        <div class="absolute top-0 w-full h-20 bg-gradient-to-b from-[#0f0518] to-transparent"></div>
+        
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-5xl font-script text-softGold mb-4">Nossos Momentos</h2>
+                <p class="text-rosePink font-serif italic">"Com você, tudo faz sentido."</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-4">
+                <!-- Foto 1 -->
+                <div class="reveal polaroid transform rotate-2 hover:z-50 transition duration-500">
+                    <img src="img/ss2.jpeg" class="w-full h-64 object-cover" alt="Foto 1">
+                    <div class="text-center mt-2 font-script text-gray-800 text-xl">Sorrisos</div>
+                </div>
+                <!-- Foto 2 -->
+                <div class="reveal polaroid transform -rotate-2 mt-0 md:mt-12 hover:z-50 transition duration-500">
+                    <img src="img/dd3.jpeg" class="w-full h-64 object-cover" alt="Foto 2">
+                    <div class="text-center mt-2 font-script text-gray-800 text-xl">Viagens</div>
+                </div>
+                <!-- Foto 3 -->
+                <div class="reveal polaroid transform rotate-1 hover:z-50 transition duration-500">
+                    <img src="img/aa1.jpeg" class="w-full h-64 object-cover" alt="Foto 3">
+                    <div class="text-center mt-2 font-script text-gray-800 text-xl">Carinho</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MENSAGEM ESPECIAL (CARTA) -->
+    <section class="py-24 px-4 flex justify-center items-center relative">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
+        
+        <div class="reveal max-w-2xl w-full vintage-paper text-gray-800 p-8 md:p-12 relative transform rotate-1">
+            <!-- Clipe de papel -->
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-16 border-4 border-gray-400 rounded-full z-20"></div>
+            
+            <div class="font-serif text-lg md:text-xl relative z-10">
+                <p class="mb-4 font-bold">Meu amor,</p>
+                <p class="mb-4">
+                    Escrevo isso para te lembrar Lavínia Nunes o quanto você é especial. Desde que você entrou na minha vida, os dias têm mais cor e as noites mais brilho.
+                </p>
+                <p class="mb-4">
+                    Cada momento contigo é um presente que guardo com todo carinho. Adoro seu sorriso, seu jeito de olhar e até suas manias que me fazem rir.
+                </p>
+                <p class="mb-8">
+                    Obrigado por ser minha parceira, minha melhor amiga e o grande amor da minha vida.
+                </p>
+                <p class="text-right font-script text-3xl mt-8">Com todo meu amor,</p>
+                <p class="text-right font-script text-2xl">Gabriel  William</p>
+            </div>
+
+            <!-- Ilustrações decorativas -->
+            <div class="absolute bottom-4 left-4 text-wine/40 text-4xl"><i class="fas fa-feather-alt"></i></div>
+            <div class="absolute top-4 right-4 text-wine/40 text-3xl"><i class="fas fa-heart"></i></div>
+        </div>
+    </section>
+
+    <!-- CARROSSEL DE CARTÕES (MEMÓRIAS/PRINTS) -->
+    <section class="py-20 overflow-hidden relative">
+        <div class="text-center mb-10 reveal">
+            <h2 class="text-4xl font-script text-softGold">Pequenos Detalhes</h2>
+        </div>
+        
+        <!-- Container de scroll horizontal -->
+        <div class="flex overflow-x-auto pb-10 gap-6 px-8 snap-x snap-mandatory scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
+            
+            <!-- Card 1 -->
+            <div class="min-w-[280px] h-[350px] bg-white rounded-lg shadow-xl p-4 flex flex-col items-center justify-center transform hover:scale-105 transition duration-300 snap-center border-4 border-white rotate-1">
+                <div class="bg-gray-100 w-full h-full flex items-center justify-center mb-2 overflow-hidden rounded relative">
+                    <img src="img/dbv.jpeg" alt="Nossos Sonhos" class="w-full h-full object-cover">
+                </div>
+                <p class="font-script text-2xl text-wine">Uma vez desbravador, sempre desbravador</p>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="min-w-[280px] h-[350px] bg-white rounded-lg shadow-xl p-4 flex flex-col items-center justify-center transform hover:scale-105 transition duration-300 snap-center border-4 border-white -rotate-2">
+                <div class="bg-gray-100 w-full h-full flex items-center justify-center mb-2 overflow-hidden rounded">
+                     <img src="img/nos2.jpeg" alt="Nossos Sonhos" class="w-full h-full object-cover">
+                </div>
+                <p class="font-script text-2xl text-wine">Shopping</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="min-w-[280px] h-[350px] bg-white rounded-lg shadow-xl p-4 flex flex-col items-center justify-center transform hover:scale-105 transition duration-300 snap-center border-4 border-white rotate-2">
+                <div class="bg-gray-100 w-full h-full flex items-center justify-center mb-2 overflow-hidden rounded">
+                    <img src="img/juntos.jpeg" alt="Nossos Sonhos" class="w-full h-full object-cover">
+                </div>
+                <p class="font-script text-2xl text-wine">Mimo</p>
+            </div>
+             <!-- Card 4 -->
+             <div class="min-w-[280px] h-[350px] bg-white rounded-lg shadow-xl p-4 flex flex-col items-center justify-center transform hover:scale-105 transition duration-300 snap-center border-4 border-white -rotate-1">
+                <div class="bg-gray-100 w-full h-full flex items-center justify-center mb-2 overflow-hidden rounded">
+                    <img src="img/sonho.jpeg" alt="Nossos Sonhos" class="w-full h-full object-cover">
+                </div>
+                <p class="font-script text-2xl text-wine">Nosso Sonho</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL COM SURPRESA -->
+    <footer class="h-screen flex flex-col justify-center items-center text-center relative bg-gradient-to-t from-black to-deepNight">
+        
+        <div class="z-10 px-4 reveal">
+            <h2 class="text-4xl md:text-6xl font-script text-white mb-8 animate-pulse-slow">
+                Eu te amo hoje, amanhã e para sempre.
+            </h2>
+            
+            <button onclick="openSurprise()" class="group relative px-8 py-3 bg-transparent border-2 border-softGold text-softGold font-serif text-lg tracking-widest hover:bg-softGold hover:text-deepNight transition-all duration-500 rounded-sm">
+                <span class="absolute inset-0 w-full h-full bg-softGold transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500 -z-10"></span>
+                CLIQUE PARA VER MAIS
+            </button>
+        </div>
+
+        <!-- Partículas de rodapé -->
+        <div class="absolute bottom-0 w-full h-32 bg-gradient-to-t from-softGold/10 to-transparent"></div>
+    </footer>
+
+    <!-- MODAL SURPRESA -->
+    <div id="surpriseModal" class="fixed inset-0 bg-black/90 z-[60] hidden flex justify-center items-center px-4 opacity-0 transition-opacity duration-700">
+        <div class="bg-white p-2 md:p-4 max-w-lg w-full transform scale-90 transition-transform duration-500 relative shadow-[0_0_50px_rgba(114,47,55,0.8)]">
+            <button onclick="closeSurprise()" class="absolute -top-4 -right-4 bg-wine text-white rounded-full w-10 h-10 hover:bg-red-600 transition z-50 shadow-lg">✕</button>
+            
+            <div class="border-2 border-wine p-6 text-center bg-[url('https://www.transparenttextures.com/patterns/linen.png')]">
+                <h3 class="text-4xl font-script text-wine mb-4">Minha Surpresa para Você</h3>
+                <div class="my-6">
+                    <!-- Espaço para um presente digital: Foto final, cupom de jantar, ou poema -->
+                    <img src="img/jantar.jpg" class="w-full h-48 object-cover rounded-sm filter brightness-110 mb-4 mx-auto shadow-md" alt="Corações">
+                    <p class="font-serif text-gray-700 text-lg italic">"Vamos jantar no seu lugar favorito no Final de Semana?"</p>
+                    <p class="text-xs text-gray-500 mt-2">(Vale um jantar romântico)</p>
+                </div>
+                <div class="flex justify-center gap-4 text-wine text-2xl">
+                    <i class="fas fa-heart animate-bounce"></i>
+                    <i class="fas fa-heart animate-bounce" style="animation-delay: 0.2s"></i>
+                    <i class="fas fa-heart animate-bounce" style="animation-delay: 0.4s"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Lógicos -->
+    <script>
+        // --- 1. Canvas de Estrelas ---
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initStars();
+        }
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2;
+                this.opacity = Math.random();
+                this.speed = Math.random() * 0.05;
+                this.direction = Math.random() > 0.5 ? 1 : -1;
+            }
+
+            update() {
+                this.y -= this.speed * 2; // Movimento suave para cima
+                this.opacity += this.speed * this.direction;
+
+                if (this.opacity < 0 || this.opacity > 1) {
+                    this.direction *= -1;
+                }
+                
+                // Resetar se sair da tela
+                if (this.y < 0) {
+                    this.y = height;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            const starCount = Math.floor(width * 0.15); // Quantidade baseada na largura
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, width, height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            requestAnimationFrame(animateStars);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animateStars();
+
+        // --- 2. Efeito de Máquina de Escrever ---
+        const phrases = [
+            "Você é meu sonho realizado...",
+            "Meu porto seguro...",
+            "O amor da minha vida."
+        ];
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typingElement = document.getElementById('typing-text');
+
+        function typeWriter() {
+            const currentPhrase = phrases[phraseIndex];
+            
+            if (isDeleting) {
+                typingElement.textContent = currentPhrase.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typingElement.textContent = currentPhrase.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 100;
+
+            if (!isDeleting && charIndex === currentPhrase.length) {
+                typeSpeed = 2000; // Pausa no final da frase
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                typeSpeed = 500;
+            }
+
+            setTimeout(typeWriter, typeSpeed);
+        }
+
+        // Iniciar digitação após carregar
+        setTimeout(typeWriter, 1000);
+
+        // --- 3. Scroll Reveal (Fade In) ---
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            const windowHeight = window.innerHeight;
+            const elementVisible = 150;
+
+            reveals.forEach((reveal) => {
+                const elementTop = reveal.getBoundingClientRect().top;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveal.classList.add('active');
+                }
+            });
+        }
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Trigger inicial
+
+        // --- 4. Áudio Player ---
+        const musicBtn = document.getElementById('musicBtn');
+        const bgMusic = document.getElementById('bgMusic');
+        let isPlaying = false;
+
+        musicBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+                musicBtn.classList.remove('bg-rosePink');
+                musicBtn.classList.add('bg-wine/80');
+            } else {
+                bgMusic.play();
+                musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                musicBtn.classList.remove('bg-wine/80');
+                musicBtn.classList.add('bg-rosePink');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // --- 5. Modal Surpresa ---
+        function openSurprise() {
+            const modal = document.getElementById('surpriseModal');
+            modal.classList.remove('hidden');
+            // Timeout para permitir a transição de opacidade
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('scale-90');
+                modal.children[0].classList.add('scale-100');
+            }, 10);
+            createConfetti();
+        }
+
+        function closeSurprise() {
+            const modal = document.getElementById('surpriseModal');
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.remove('scale-100');
+            modal.children[0].classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 700);
+        }
+
+        // Função simples de confete para o modal
+        function createConfetti() {
+            const colors = ['#ffd700', '#722f37', '#ffccd5'];
+            for(let i=0; i<50; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.zIndex = '100';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(confetti);
+
+                const animation = confetti.animate([
+                    { top: '-10px', opacity: 1 },
+                    { top: '100vh', opacity: 0 }
+                ], {
+                    duration: 2000 + Math.random() * 3000,
+                    easing: 'ease-out'
+                });
+
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+
+        // Criar corações flutuantes no clique
+        document.addEventListener('click', function(e) {
+            // Evitar criar no botão de música
+            if(e.target.closest('button')) return;
+
+            const heart = document.createElement('div');
+            heart.innerHTML = '<i class="fas fa-heart"></i>';
+            heart.style.position = 'fixed';
+            heart.style.left = e.clientX + 'px';
+            heart.style.top = e.clientY + 'px';
+            heart.style.color = '#ffccd5';
+            heart.style.fontSize = '20px';
+            heart.style.pointerEvents = 'none';
+            heart.style.zIndex = '9999';
+            document.body.appendChild(heart);
+
+            heart.animate([
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: 'translate(-50%, -150px) scale(1.5)', opacity: 0 }
+            ], {
+                duration: 1000,
+                easing: 'ease-out'
+            }).onfinish = () => heart.remove();
+        });
+
+    </script>
+</body>
+</html>
